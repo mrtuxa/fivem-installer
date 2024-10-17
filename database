@@ -19,7 +19,7 @@ fi
 
 aptitude update
 
-aptitude install php7.4-{,cli,common,curl,gd,intl,json,mbstring,mysql,opcache,readline,xml,xsl,zip,bz2} libapache2-mod-php7.4 mariadb-{,server,client} -y
+aptitude install apache2 php7.4-{,cli,common,curl,gd,intl,json,mbstring,mysql,opcache,readline,xml,xsl,zip,bz2} libapache2-mod-php7.4 mariadb-{,server,client} -y
 
 # Information for Debian 11
 # Now enter the command mysql_secure_installation to complete the
