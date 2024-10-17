@@ -1,0 +1,79 @@
+#!/usr/bin/env bash
+
+apt update
+apt install aptitude -y
+aptitude upgrade -y
+aptitude install ca-certificates apt-transport-https lsb-release gnupg curl nano unzip -y
+
+# Check distribution
+if grep -q "Ubuntu" /etc/os-release; then
+  aptitude install software-properties-common -y
+  add-apt-repository ppa:ondrej/php -y
+elif grep -q "Debian" /etc/os-release; then
+  curl -fsSL https://packages.sury.org/php/apt.gpg -o /usr/share/keyrings/php-archive-keyring.gpg
+  echo "deb [signed-by=/usr/share/keyrings/php-archive-keyring.gpg] https://packages.sury.org/php/ $(lsb_release -sc) main" >/etc/apt/sources.list.d/php.list
+else
+  echo "This system is not supported yet"
+  exit 1
+fi
+
+aptitude update
+
+aptitude install php7.4-{,cli,common,curl,gd,intl,json,mbstring,mysql,opcache,readline,xml,xsl,zip,bz2} libapache2-mod-php7.4 mariadb-{,server,client} -y
+
+# Information for Debian 11
+# Now enter the command mysql_secure_installation to complete the
+# configuration of your MariaDB server. At the first question regarding
+# the current password, you don't have to type in anything, just press enter.
+# At the following question regarding switching to Unix socket authentication,
+# type "n" and press Enter. Confirm the next question concerning the change of
+# the root password with enter as well. Now you have to set a password for the
+# MariaDB root user. There are no characters displayed during input, but this is normal.
+# Confirm all further questions (deleting the anonymous user,
+# disabling the external root login for security reasons, removing the test
+# database and updating the privileges/permissions) also with enter. Then the
+# MariaDB server is completely installed and configured.
+
+mysql_secure_installation
+
+if [ ! -d "/tmp/phpMyAdmin-latest-all-languages" ]; then
+  if [ ! -d "/usr/share/phpmyadmin" ]; then
+    wget -P /tmp https://www.phpmyadmin.net/downloads/phpMyAdmin-latest-all-languages.zip
+    unzip /tmp/phpMyAdmin-latest-all-languages.zip -d /tmp
+    mv /tmp/phpMyAdmin-*-all-languages /usr/share/phpmyadmin
+    chmod -R 0755 /usr/share/phpmyadmin
+
+    if [ ! -f "/etc/apache2/conf-available/phpmyadmin.conf" ]; then
+      echo "# phpMyAdmin Apache configuration
+            Alias /phpmyadmin /usr/share/phpmyadmin
+
+            <Directory /usr/share/phpmyadmin>
+                Options SymLinksIfOwnerMatch
+                DirectoryIndex index.php
+            </Directory>
+
+            # Disallow web access to directories that don't need it
+            <Directory /usr/share/phpmyadmin/templates>
+                Require all denied
+            </Directory>
+
+            <Directory /usr/share/phpmyadmin/libraries>
+                Require all denied
+            </Directory>
+
+            <Directory /usr/share/phpmyadmin/setup/lib>
+                Require all denied
+            </Directory>" > /etc/apache2/conf-available/phpmyadmin.conf
+
+      a2enconf phpmyadmin
+      systemctl reload apache2
+
+      mkdir /usr/share/phpmyadmin/tmp/
+      chown -R www-data:www-data /usr/share/phpmyadmin/tmp/
+    fi
+  fi
+fi
+
+if grep -q "Ubuntu" /etc/os-release; then
+  mysql -p -e "UPDATE mysql.user SET plugin = 'mysql_native_password' WHERE user = 'root' AND plugin = 'unix_socket'; FLUSH PRIVILEGES;"
+fi

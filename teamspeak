@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+
+echo "Enter the user where teamspeak should be running (leave empty for: teamspeak): "
+read -r unix_user
+echo "Enter database name for teamspeak (leave empty for: teamspeak): "
+read -r database_name
+echo "Enter database password for teamspeak: "
+read -r -s database_password
+
+
+
+if [ -z "$unix_user" ]; then
+    unix_user="teamspeak"
+fi
+
+if [ -z "$database_name" ]; then
+    unix_user="teamspeak"
+fi
+
+useradd -m "$unix_user"  -G docker
+
+
+if [ -z "$database_password" ]; then
+  database_password=$(pwgen -s 12 1)  # Generate a secure 12-character password
+  echo "Generated password for teamspeak: $database_password"
+fi
+
+su - "$unix_user" -c "echo \'version: '3.1'
+services:
+  teamspeak:
+    image: teamspeak
+    restart: always
+    ports:
+      - 9987:9987/udp
+      - 10011:10011
+      - 30033:30033
+    environment:
+      TS3SERVER_DB_PLUGIN: ts3db_mariadb
+      TS3SERVER_DB_SQLCREATEPATH: create_mariadb
+      TS3SERVER_DB_HOST: teamspeak-db
+      TS3SERVER_DB_USER: root
+      TS3SERVER_DB_PASSWORD: $database_password
+      TS3SERVER_DB_NAME: $database_name
+      TS3SERVER_DB_WAITUNTILREADY: 30
+      TS3SERVER_LICENSE: accept
+    volumes:
+      - ./data:/var/ts3server/
+  teamspeak-db:
+    image: mariadb
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: $database_password
+      MYSQL_DATABASE: $database_name
+    volumes:
+      - ./sql:/var/lib/mysql/\" > docker-compose.yml"
+
+su - "$unix_user" -c "docker compose up -d"

@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+
+echo "Enter username, where the service should run (leave blank for fivem): "
+read -r unix_user
+
+adduser -m "$unix_user"
+
+echo "Enter database username (leave blank for fivem): "
+read -r mysql_username
+echo "Enter database password"
+read -r -s mysql_password
+
+echo "Enter database name (leave blank for fivem): "
+read -r database
+
+
+if [ -z "$mysql_username" ]; then
+    unix_user="fivem"
+fi
+
+if [ -z "$mysql_username" ]; then
+	mysql_username="fivem"
+fi
+
+if [ -z "$database" ]; then
+	database="fivem"
+fi
+
+
+
+if [ -z "$mysql_password" ]; then
+  mysql_password=$(pwgen -s 12 1)  # Generate a secure 12-character password
+  echo "Generated password: $mysql_password"
+fi
+
+mysql -u root -p -e "CREATE DATABASE $database; CREATE USER '$mysql_username'@'localhost' IDENTIFIED BY '$mysql_password'; RANT ALL PRIVILEGES ON $database.* TO '$mysql_username'@'localhost'; FLUSH PRIVILEGES;"
+
+su - "$unix_user" -c "wget https://runtime.fivem.net/artifacts/fivem/build_proot_linux/master/7290-a654bcc2adfa27c4e020fc915a1a6343c3b4f921/fx.tar.xz"
+su - "$unix_user" -c  -c "mkdir /home/$unix_user/fivem"
+
+ if [ ! -d "/home/$unix_user/fivem" ]; then
+    su - "$unix_user" -c "tar xvf fx.tar.xz -C /home/$unix_user/fivem"
+ fi
+
+ aptitude install git -y
+git clone https://github.com/citizenfx/cfx-server-data.git /home/$unix_user/fivem/server-data
+
+
+chown -Rv "$unix_user":users /home/lucy/fivem/
+
+
+

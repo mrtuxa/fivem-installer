@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+if [ $EUID -eq 0 ]; then
+  echo "installing database"
+  source database
+  echo "installing and configuring fivem"
+  source fivem
+  echo "installing docker"
+  source docker
+  echo "installing and configuring teamspeak"
+  source teamspeak
+else
+  echo "You are not root or using sudo"
+fi
