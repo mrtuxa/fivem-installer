@@ -3,7 +3,7 @@
 echo "Enter username, where the service should run (leave blank for fivem): "
 read -r unix_user
 
-adduser -m "$unix_user"
+useradd -m "$unix_user"
 
 echo "Enter database username (leave blank for fivem): "
 read -r mysql_username
