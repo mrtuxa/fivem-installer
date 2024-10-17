@@ -3,6 +3,10 @@
 echo "Enter username, where the service should run (leave blank for fivem): "
 read -r unix_user
 
+if [ -z "$mysql_username" ]; then
+    unix_user="fivem"
+fi
+
 useradd -m "$unix_user"
 
 echo "Enter database username (leave blank for fivem): "
@@ -12,11 +16,6 @@ read -r -s mysql_password
 
 echo "Enter database name (leave blank for fivem): "
 read -r database
-
-
-if [ -z "$mysql_username" ]; then
-    unix_user="fivem"
-fi
 
 if [ -z "$mysql_username" ]; then
 	mysql_username="fivem"
