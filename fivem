@@ -45,7 +45,7 @@ su - "$unix_user" -c  -c "mkdir /home/$unix_user/fivem"
 git clone https://github.com/citizenfx/cfx-server-data.git /home/$unix_user/fivem/server-data
 
 
-chown -Rv "$unix_user":users /home/lucy/fivem/
+chown -Rv "$unix_user":users /home/"$unix_user"/fivem/
 
 
 
